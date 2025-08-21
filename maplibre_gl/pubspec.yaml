@@ -11,8 +11,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  maplibre_gl_platform_interface: ^0.22.0
-  maplibre_gl_web: ^0.22.0
+
+  maplibre_gl_platform_interface:
+    git:
+      url: https://github.com/will-maclean/flutter-maplibre-gl.git
+      path: maplibre_gl_platform_interface
+      ref: main
+
+  maplibre_gl_web:
+    git:
+      url: https://github.com/will-maclean/flutter-maplibre-gl.git
+      path: maplibre_gl_web
+      ref: main
 
 dev_dependencies:
   very_good_analysis: ^5.0.0
