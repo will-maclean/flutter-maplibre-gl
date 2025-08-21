@@ -14,8 +14,9 @@ abstract class AnnotationManager<T extends Annotation> {
   /// base id of the manager. User [layerdIds] to get the actual ids.
   final String id;
 
-  List<String> get layerIds =>
-      [for (int i = 0; i < allLayerProperties.length; i++) _makeLayerId(i)];
+  List<String> get layerIds => [
+    for (int i = 0; i < allLayerProperties.length; i++) _makeLayerId(i),
+  ];
 
   /// If disabled the manager offers no interaction for the created symbols
   final bool enableInteraction;
@@ -41,8 +42,11 @@ abstract class AnnotationManager<T extends Annotation> {
   }) : id = getRandomString() {
     for (var i = 0; i < allLayerProperties.length; i++) {
       final layerId = _makeLayerId(i);
-      controller.addGeoJsonSource(layerId, buildFeatureCollection([]),
-          promoteId: "id");
+      controller.addGeoJsonSource(
+        layerId,
+        buildFeatureCollection([]),
+        promoteId: "id",
+      );
       controller.addLayer(layerId, layerId, allLayerProperties[i]);
     }
 
@@ -63,7 +67,11 @@ abstract class AnnotationManager<T extends Annotation> {
   }
 
   _onFeatureTapped(
-      dynamic id, Point<double> point, LatLng coordinates, String layerId) {
+    dynamic id,
+    Point<double> point,
+    LatLng coordinates,
+    String? layerId,
+  ) {
     final annotation = _idToAnnotation[id];
     if (annotation != null) {
       onTap!(annotation);
@@ -84,15 +92,19 @@ abstract class AnnotationManager<T extends Annotation> {
 
       for (var i = 0; i < featureBuckets.length; i++) {
         await controller.setGeoJsonSource(
-            _makeLayerId(i),
-            buildFeatureCollection(
-                [for (final l in featureBuckets[i]) l.toGeoJson()]));
+          _makeLayerId(i),
+          buildFeatureCollection([
+            for (final l in featureBuckets[i]) l.toGeoJson(),
+          ]),
+        );
       }
     } else {
       await controller.setGeoJsonSource(
-          _makeLayerId(0),
-          buildFeatureCollection(
-              [for (final l in _idToAnnotation.values) l.toGeoJson()]));
+        _makeLayerId(0),
+        buildFeatureCollection([
+          for (final l in _idToAnnotation.values) l.toGeoJson(),
+        ]),
+      );
     }
   }
 
@@ -143,12 +155,14 @@ abstract class AnnotationManager<T extends Annotation> {
     }
   }
 
-  _onDrag(dynamic id,
-      {required Point<double> point,
-      required LatLng origin,
-      required LatLng current,
-      required LatLng delta,
-      required DragEventType eventType}) async {
+  _onDrag(
+    dynamic id, {
+    required Point<double> point,
+    required LatLng origin,
+    required LatLng current,
+    required LatLng delta,
+    required DragEventType eventType,
+  }) async {
     final annotation = byId(id);
     if (annotation != null) {
       annotation.translate(delta);
@@ -160,8 +174,10 @@ abstract class AnnotationManager<T extends Annotation> {
   /// Set an existing anntotation to the map. Use this to do a fast update for a
   /// single annotation
   Future<void> set(T anntotation) async {
-    assert(_idToAnnotation.containsKey(anntotation.id),
-        "you can only set existing annotations");
+    assert(
+      _idToAnnotation.containsKey(anntotation.id),
+      "you can only set existing annotations",
+    );
     _idToAnnotation[anntotation.id] = anntotation;
     final oldLayerIndex = _idToLayerIndex[anntotation.id];
     final layerIndex = selectLayer != null ? selectLayer!(anntotation) : 0;
@@ -171,7 +187,9 @@ abstract class AnnotationManager<T extends Annotation> {
       await _setAll();
     } else {
       await controller.setGeoJsonFeature(
-          _makeLayerId(layerIndex), anntotation.toGeoJson());
+        _makeLayerId(layerIndex),
+        anntotation.toGeoJson(),
+      );
     }
   }
 }
@@ -183,8 +201,8 @@ class LineManager extends AnnotationManager<Line> {
     super.onDrag,
     super.enableInteraction = true,
   }) : super(
-          selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
-        );
+         selectLayer: (Line line) => line.options.linePattern == null ? 0 : 1,
+       );
 
   static const _baseProperties = LineLayerProperties(
     lineJoin: [Expressions.get, 'lineJoin'],
@@ -198,10 +216,11 @@ class LineManager extends AnnotationManager<Line> {
 
   @override
   List<LayerProperties> get allLayerProperties => [
-        _baseProperties,
-        _baseProperties.copyWith(const LineLayerProperties(
-            linePattern: [Expressions.get, 'linePattern'])),
-      ];
+    _baseProperties,
+    _baseProperties.copyWith(
+      const LineLayerProperties(linePattern: [Expressions.get, 'linePattern']),
+    ),
+  ];
 }
 
 class FillManager extends AnnotationManager<Fill> {
@@ -211,23 +230,23 @@ class FillManager extends AnnotationManager<Fill> {
     super.onDrag,
     super.enableInteraction = true,
   }) : super(
-          selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
-        );
+         selectLayer: (Fill fill) => fill.options.fillPattern == null ? 0 : 1,
+       );
 
   @override
   List<LayerProperties> get allLayerProperties => const [
-        FillLayerProperties(
-          fillOpacity: [Expressions.get, 'fillOpacity'],
-          fillColor: [Expressions.get, 'fillColor'],
-          fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
-        ),
-        FillLayerProperties(
-          fillOpacity: [Expressions.get, 'fillOpacity'],
-          fillColor: [Expressions.get, 'fillColor'],
-          fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
-          fillPattern: [Expressions.get, 'fillPattern'],
-        )
-      ];
+    FillLayerProperties(
+      fillOpacity: [Expressions.get, 'fillOpacity'],
+      fillColor: [Expressions.get, 'fillColor'],
+      fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
+    ),
+    FillLayerProperties(
+      fillOpacity: [Expressions.get, 'fillOpacity'],
+      fillColor: [Expressions.get, 'fillColor'],
+      fillOutlineColor: [Expressions.get, 'fillOutlineColor'],
+      fillPattern: [Expressions.get, 'fillPattern'],
+    ),
+  ];
 }
 
 class CircleManager extends AnnotationManager<Circle> {
@@ -240,16 +259,16 @@ class CircleManager extends AnnotationManager<Circle> {
 
   @override
   List<LayerProperties> get allLayerProperties => const [
-        CircleLayerProperties(
-          circleRadius: [Expressions.get, 'circleRadius'],
-          circleColor: [Expressions.get, 'circleColor'],
-          circleBlur: [Expressions.get, 'circleBlur'],
-          circleOpacity: [Expressions.get, 'circleOpacity'],
-          circleStrokeWidth: [Expressions.get, 'circleStrokeWidth'],
-          circleStrokeColor: [Expressions.get, 'circleStrokeColor'],
-          circleStrokeOpacity: [Expressions.get, 'circleStrokeOpacity'],
-        )
-      ];
+    CircleLayerProperties(
+      circleRadius: [Expressions.get, 'circleRadius'],
+      circleColor: [Expressions.get, 'circleColor'],
+      circleBlur: [Expressions.get, 'circleBlur'],
+      circleOpacity: [Expressions.get, 'circleOpacity'],
+      circleStrokeWidth: [Expressions.get, 'circleStrokeWidth'],
+      circleStrokeColor: [Expressions.get, 'circleStrokeColor'],
+      circleStrokeOpacity: [Expressions.get, 'circleStrokeOpacity'],
+    ),
+  ];
 }
 
 class SymbolManager extends AnnotationManager<Symbol> {
@@ -262,10 +281,10 @@ class SymbolManager extends AnnotationManager<Symbol> {
     bool iconIgnorePlacement = false,
     bool textIgnorePlacement = false,
     super.enableInteraction = true,
-  })  : _iconAllowOverlap = iconAllowOverlap,
-        _textAllowOverlap = textAllowOverlap,
-        _iconIgnorePlacement = iconIgnorePlacement,
-        _textIgnorePlacement = textIgnorePlacement;
+  }) : _iconAllowOverlap = iconAllowOverlap,
+       _textAllowOverlap = textAllowOverlap,
+       _iconIgnorePlacement = iconIgnorePlacement,
+       _textIgnorePlacement = textIgnorePlacement;
 
   bool _iconAllowOverlap;
   bool _textAllowOverlap;
@@ -298,49 +317,49 @@ class SymbolManager extends AnnotationManager<Symbol> {
 
   @override
   List<LayerProperties> get allLayerProperties => [
-        SymbolLayerProperties(
-          iconSize: [Expressions.get, 'iconSize'],
-          iconImage: [Expressions.get, 'iconImage'],
-          iconRotate: [Expressions.get, 'iconRotate'],
-          iconOffset: [Expressions.get, 'iconOffset'],
-          iconAnchor: [Expressions.get, 'iconAnchor'],
-          iconOpacity: [Expressions.get, 'iconOpacity'],
-          iconColor: [Expressions.get, 'iconColor'],
-          iconHaloColor: [Expressions.get, 'iconHaloColor'],
-          iconHaloWidth: [Expressions.get, 'iconHaloWidth'],
-          iconHaloBlur: [Expressions.get, 'iconHaloBlur'],
-          // note that web does not support setting this in a fully data driven
-          // way this is a upstream issue
-          textFont: kIsWeb
-              ? null
-              : [
-                  Expressions.caseExpression,
-                  [Expressions.has, 'fontNames'],
-                  [Expressions.get, 'fontNames'],
-                  [
-                    Expressions.literal,
-                    ["Open Sans Regular", "Arial Unicode MS Regular"]
-                  ],
-                ],
-          textField: [Expressions.get, 'textField'],
-          textSize: [Expressions.get, 'textSize'],
-          textMaxWidth: [Expressions.get, 'textMaxWidth'],
-          textLetterSpacing: [Expressions.get, 'textLetterSpacing'],
-          textJustify: [Expressions.get, 'textJustify'],
-          textAnchor: [Expressions.get, 'textAnchor'],
-          textRotate: [Expressions.get, 'textRotate'],
-          textTransform: [Expressions.get, 'textTransform'],
-          textOffset: [Expressions.get, 'textOffset'],
-          textOpacity: [Expressions.get, 'textOpacity'],
-          textColor: [Expressions.get, 'textColor'],
-          textHaloColor: [Expressions.get, 'textHaloColor'],
-          textHaloWidth: [Expressions.get, 'textHaloWidth'],
-          textHaloBlur: [Expressions.get, 'textHaloBlur'],
-          symbolSortKey: [Expressions.get, 'zIndex'],
-          iconAllowOverlap: _iconAllowOverlap,
-          iconIgnorePlacement: _iconIgnorePlacement,
-          textAllowOverlap: _textAllowOverlap,
-          textIgnorePlacement: _textIgnorePlacement,
-        )
-      ];
+    SymbolLayerProperties(
+      iconSize: [Expressions.get, 'iconSize'],
+      iconImage: [Expressions.get, 'iconImage'],
+      iconRotate: [Expressions.get, 'iconRotate'],
+      iconOffset: [Expressions.get, 'iconOffset'],
+      iconAnchor: [Expressions.get, 'iconAnchor'],
+      iconOpacity: [Expressions.get, 'iconOpacity'],
+      iconColor: [Expressions.get, 'iconColor'],
+      iconHaloColor: [Expressions.get, 'iconHaloColor'],
+      iconHaloWidth: [Expressions.get, 'iconHaloWidth'],
+      iconHaloBlur: [Expressions.get, 'iconHaloBlur'],
+      // note that web does not support setting this in a fully data driven
+      // way this is a upstream issue
+      textFont: kIsWeb
+          ? null
+          : [
+              Expressions.caseExpression,
+              [Expressions.has, 'fontNames'],
+              [Expressions.get, 'fontNames'],
+              [
+                Expressions.literal,
+                ["Open Sans Regular", "Arial Unicode MS Regular"],
+              ],
+            ],
+      textField: [Expressions.get, 'textField'],
+      textSize: [Expressions.get, 'textSize'],
+      textMaxWidth: [Expressions.get, 'textMaxWidth'],
+      textLetterSpacing: [Expressions.get, 'textLetterSpacing'],
+      textJustify: [Expressions.get, 'textJustify'],
+      textAnchor: [Expressions.get, 'textAnchor'],
+      textRotate: [Expressions.get, 'textRotate'],
+      textTransform: [Expressions.get, 'textTransform'],
+      textOffset: [Expressions.get, 'textOffset'],
+      textOpacity: [Expressions.get, 'textOpacity'],
+      textColor: [Expressions.get, 'textColor'],
+      textHaloColor: [Expressions.get, 'textHaloColor'],
+      textHaloWidth: [Expressions.get, 'textHaloWidth'],
+      textHaloBlur: [Expressions.get, 'textHaloBlur'],
+      symbolSortKey: [Expressions.get, 'zIndex'],
+      iconAllowOverlap: _iconAllowOverlap,
+      iconIgnorePlacement: _iconIgnorePlacement,
+      textAllowOverlap: _textAllowOverlap,
+      textIgnorePlacement: _textIgnorePlacement,
+    ),
+  ];
 }
